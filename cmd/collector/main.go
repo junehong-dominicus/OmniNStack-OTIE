@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
@@ -20,7 +21,11 @@ func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	// Initialize Kafka Producer
-	kafkaBrokers := []string{"localhost:9092"}
+	brokersEnv := os.Getenv("KAFKA_BROKERS")
+	if brokersEnv == "" {
+		brokersEnv = "127.0.0.1:9092"
+	}
+	kafkaBrokers := strings.Split(brokersEnv, ",")
 	kafkaTopic := "raw-events"
 	producer := kafka.NewKafkaProducer(kafkaBrokers, kafkaTopic)
 	defer producer.Close()

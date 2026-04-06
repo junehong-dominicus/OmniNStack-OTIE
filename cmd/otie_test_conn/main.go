@@ -14,7 +14,7 @@ import (
 
 func main() {
 	topic := "raw-events"
-	brokers := []string{"localhost:9092"}
+	brokers := []string{"127.0.0.1:9092"}
 
 	log.Printf("🎧 Connecting to Kafka on %v. Subscribing to topic: '%s'...", brokers, topic)
 
