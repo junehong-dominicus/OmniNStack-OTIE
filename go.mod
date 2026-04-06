@@ -1,3 +1,3 @@
-module github.com/OmniNStack/OmniNStack-OTIE
+module github.com/junehong-dominicus/OmniNStack-OTIE
 
-go 1.22
+go 1.26

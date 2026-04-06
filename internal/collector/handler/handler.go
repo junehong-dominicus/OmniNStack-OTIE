@@ -4,31 +4,30 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/OmniNStack/OmniNStack-OTIE/api/v1"
-	"github.com/OmniNStack/OmniNStack-OTIE/internal/collector/kafka"
+	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
+	"github.com/junehong-dominicus/OmniNStack-OTIE/internal/collector/service"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type CollectorHandler struct {
 	collector.UnimplementedCollectorServiceServer
-	producer kafka.Producer
+	svc service.Service
 }
 
-func NewCollectorHandler(producer kafka.Producer) *CollectorHandler {
+func NewCollectorHandler(svc service.Service) *CollectorHandler {
 	return &CollectorHandler{
-		producer: producer,
+		svc: svc,
 	}
 }
 
 func (h *CollectorHandler) Ingest(ctx context.Context, req *collector.IngestRequest) (*collector.IngestResponse, error) {
 	slog.Info("Ingesting log entry", "device_id", req.Entry.DeviceId, "protocol", req.Entry.Protocol)
 
-	err := h.producer.PublishEvent(ctx, req.Entry)
+	err := h.svc.IngestLog(ctx, req.Entry)
 	if err != nil {
 		slog.Error("Failed to ingest log entry", "error", err)
-		return &collector.IngestResponse{
-			Success: false,
-			Message: "Failed to publish to Kafka",
-		}, nil
+		return nil, status.Errorf(codes.InvalidArgument, "Ingestion failed: %v", err)
 	}
 
 	return &collector.IngestResponse{

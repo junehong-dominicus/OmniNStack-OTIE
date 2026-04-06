@@ -1,16 +1,16 @@
 package main
 
 import (
-	"log"
 	"log/slog"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
+	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
 	"github.com/junehong-dominicus/OmniNStack-OTIE/internal/collector/handler"
 	"github.com/junehong-dominicus/OmniNStack-OTIE/internal/collector/kafka"
+	"github.com/junehong-dominicus/OmniNStack-OTIE/internal/collector/service"
 
 	"google.golang.org/grpc"
 )
@@ -25,8 +25,11 @@ func main() {
 	producer := kafka.NewKafkaProducer(kafkaBrokers, kafkaTopic)
 	defer producer.Close()
 
+	// Initialize Business Logic Service Layer
+	collectorService := service.NewCollectorService(producer)
+
 	// Initialize gRPC Handler
-	collectorHandler := handler.NewCollectorHandler(producer)
+	collectorHandler := handler.NewCollectorHandler(collectorService)
 
 	// Start gRPC Server
 	lis, err := net.Listen("tcp", ":50051")

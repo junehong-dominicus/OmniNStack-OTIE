@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	"github.com/OmniNStack/OmniNStack-OTIE/api/v1"
+	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
 )
 
 type Producer interface {
