@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package otie.collector.v1;
+
+option go_package = "github.com/OmniNStack/OmniNStack-OTIE/api/v1;collector";
+
+import "google/protobuf/timestamp.proto";
+
+service CollectorService {
+  rpc Ingest(IngestRequest) returns (IngestResponse);
+}
+
+message IngestRequest {
+  LogEntry entry = 1;
+}
+
+message IngestResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message LogEntry {
+  string id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  string device_id = 3;
+  string mac_address = 4;
+  string protocol = 5; // e.g., "syslog", "http", "modbus"
+  string raw_data = 6;
+  map<string, string> metadata = 7;
+}
