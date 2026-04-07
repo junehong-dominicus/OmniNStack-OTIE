@@ -1,0 +1,24 @@
+replicaCount: 1
+
+image:
+  repository: omninstack-otie-processor
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+kafka:
+  brokers: "kafka:9092"
+  in_topic: "raw-events"
+  out_topic: "processed-events"
+
+service:
+  type: ClusterIP
+  port: 50052
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi

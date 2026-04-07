@@ -47,7 +47,7 @@ OTIE is engineered for immediate horizontal scalability. Native Helm orchestrati
 
 ```bash
 helm install collector ./deployments/helm/collector \
-  --set image.repository=github.com/junehong-dominicus/OmniNStack-OTIE
+  --set image.repository=github.com/OmniNStack/OmniNStack-OTIE
 ```
 
 ---

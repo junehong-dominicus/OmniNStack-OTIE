@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
-	"github.com/junehong-dominicus/OmniNStack-OTIE/internal/collector/kafka"
+	collector "github.com/OmniNStack/OmniNStack-OTIE/api/v1"
+	"github.com/OmniNStack/OmniNStack-OTIE/internal/collector/kafka"
 )
 
 type Service interface {

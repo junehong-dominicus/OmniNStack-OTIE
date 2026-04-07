@@ -13,8 +13,11 @@ import (
 )
 
 func main() {
-	topic := "raw-events"
-	brokers := []string{"127.0.0.1:9092"}
+	topic := os.Getenv("KAFKA_TOPIC")
+	if topic == "" {
+		topic = "raw-events"
+	}
+	brokers := []string{"127.0.0.1:9094"}
 
 	log.Printf("🎧 Connecting to Kafka on %v. Subscribing to topic: '%s'...", brokers, topic)
 
@@ -27,7 +30,7 @@ func main() {
 	})
 
 	// Adjust offset to read the freshest messages rather than historic ones (for test visibility)
-	if err := r.SetOffset(kafka.LastOffset); err != nil {
+	if err := r.SetOffset(kafka.FirstOffset); err != nil {
 		log.Printf("⚠️ Warning: Could not set offset to latest: %v. Reading all messages.", err)
 	}
 
@@ -59,7 +62,7 @@ func main() {
 		fmt.Printf("🏷️  Key (Device ID): %s\n", string(m.Key))
 		fmt.Printf("📦 Encoded Payload:\n%s\n", string(m.Value))
 		fmt.Println("--------------------------------------------------------------------------------")
-		fmt.Println("🎉 If you see UUID strings and Timestamps inside the json payload above, the Collector Business Logic successfully enriched the data!")
+		fmt.Println("🎉 Data received!")
 	}
 
 	if err := r.Close(); err != nil {

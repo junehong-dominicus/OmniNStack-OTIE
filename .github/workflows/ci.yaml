@@ -15,6 +15,7 @@ on:
           - 'omninstack-otie-collector'
           - 'ghcr.io/junehong-dominicus/omninstack-otie-collector'
           - 'docker.io/junehongdominicus/omninstack-otie-collector'
+          - 'omninstack-otie-processor'
 
 jobs:
   test-go:
@@ -49,3 +50,11 @@ jobs:
           file: deployments/docker/Dockerfile.collector
           push: false
           tags: ${{ github.event.inputs.registry || 'omninstack-otie-collector' }}:latest
+
+      - name: Build Processor Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deployments/docker/Dockerfile.processor
+          push: false
+          tags: omninstack-otie-processor:latest

@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
-	"github.com/junehong-dominicus/OmniNStack-OTIE/internal/collector/service"
+	collector "github.com/OmniNStack/OmniNStack-OTIE/api/v1"
+	"github.com/OmniNStack/OmniNStack-OTIE/internal/collector/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

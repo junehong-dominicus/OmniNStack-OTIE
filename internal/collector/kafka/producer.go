@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
+	collector "github.com/OmniNStack/OmniNStack-OTIE/api/v1"
 )
 
 type Producer interface {
@@ -28,6 +28,7 @@ func NewKafkaProducer(brokers []string, topic string) Producer {
 			Topic:    topic,
 			Balancer: &kafka.LeastBytes{},
 			Async:    true,
+			AllowAutoTopicCreation: true,
 		},
 		topic: topic,
 	}

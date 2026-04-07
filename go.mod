@@ -1,4 +1,4 @@
-module github.com/junehong-dominicus/OmniNStack-OTIE
+module github.com/OmniNStack/OmniNStack-OTIE
 
 go 1.26
 

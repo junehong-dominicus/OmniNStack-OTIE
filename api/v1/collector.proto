@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package otie.collector.v1;
 
-option go_package = "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1;collector";
+option go_package = "github.com/OmniNStack/OmniNStack-OTIE/api/v1;collector";
 
 import "google/protobuf/timestamp.proto";
 

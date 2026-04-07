@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package otie.processor.v1;
+
+option go_package = "github.com/OmniNStack/OmniNStack-OTIE/api/v1/processor;processor";
+
+import "google/protobuf/timestamp.proto";
+
+// ProcessedFeature represents the normalized data ready for ML analysis/Anomalous detection
+message ProcessedFeature {
+    // Unique ID for the processed event
+    string id = 1;
+    
+    // ID of the original raw event
+    string original_event_id = 2;
+    
+    // Time the event was captured
+    google.protobuf.Timestamp timestamp = 3;
+    
+    // Source device information
+    string device_id = 4;
+    string protocol = 5;
+    
+    // --- FLATTENED FEATURES ---
+    
+    // Generic normalized data (0.0 to 1.0)
+    float normalized_value = 6;
+    
+    // Protocol specific features (represented as a map for flexibility, 
+    // but some key fields are promoted for efficiency)
+    map<string, float> numeric_features = 7;
+    map<string, string> categorical_features = 8;
+    
+    // Modbus-specific promoted features
+    int32 modbus_function_code = 9;
+    int32 modbus_register_address = 10;
+    repeated int32 modbus_values = 11;
+    
+    // BACnet-specific promoted features
+    string bacnet_object_type = 15;
+    int32 bacnet_object_instance = 16;
+    string bacnet_property_identifier = 17;
+    int32 bacnet_priority = 18;
+
+    // --- RISK & METADATA ---
+    
+    // Risk score calculated during normalization (0.0 = safe, 1.0 = highly suspicious)
+    float baseline_risk_score = 12;
+    
+    // List of indicators triggered during normalization (e.g. "UNUSUAL_FUNCTION_CODE")
+    repeated string risk_indicators = 13;
+    
+    // Execution metadata
+    string processor_version = 14;
+}

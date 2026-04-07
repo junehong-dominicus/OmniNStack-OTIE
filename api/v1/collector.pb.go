@@ -233,7 +233,7 @@ const file_api_v1_collector_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012a\n" +
 	"\x10CollectorService\x12M\n" +
-	"\x06Ingest\x12 .otie.collector.v1.IngestRequest\x1a!.otie.collector.v1.IngestResponseB@Z>github.com/junehong-dominicus/OmniNStack-OTIE/api/v1;collectorb\x06proto3"
+	"\x06Ingest\x12 .otie.collector.v1.IngestRequest\x1a!.otie.collector.v1.IngestResponseBVZTgithub.com/OmniNStack/OmniNStack-OTIE/api/v1;collectorb\x06proto3"
 
 var (
 	file_api_v1_collector_proto_rawDescOnce sync.Once

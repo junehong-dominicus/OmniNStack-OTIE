@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	collector "github.com/junehong-dominicus/OmniNStack-OTIE/api/v1"
+	collector "github.com/OmniNStack/OmniNStack-OTIE/api/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

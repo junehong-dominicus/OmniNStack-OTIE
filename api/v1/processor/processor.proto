@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package otie.processor.v1;
+
+option go_package = "github.com/OmniNStack/OmniNStack-OTIE/api/v1/processor;processor";
+
+import "google/protobuf/timestamp.proto";
+
+service ProcessorService {
+  // Manual trigger for synchronously processing a payload (primarily for testing/dev)
+  rpc Process(ProcessRequest) returns (ProcessResponse);
+  
+  // Health check
+  rpc CheckHealth(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+message ProcessRequest {
+  string raw_data = 1;
+}
+
+message ProcessResponse {
+  bool success = 1;
+  string message = 2;
+  string processed_data = 3;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  bool is_healthy = 1;
+  string status = 2;
+}
