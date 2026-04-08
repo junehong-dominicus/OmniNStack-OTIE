@@ -50,8 +50,13 @@ type ProcessedFeature struct {
 	RiskIndicators []string `protobuf:"bytes,13,rep,name=risk_indicators,json=riskIndicators,proto3" json:"risk_indicators,omitempty"`
 	// Execution metadata
 	ProcessorVersion string `protobuf:"bytes,14,opt,name=processor_version,json=processorVersion,proto3" json:"processor_version,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// BACnet-specific promoted features
+	BacnetObjectType         string `protobuf:"bytes,15,opt,name=bacnet_object_type,json=bacnetObjectType,proto3" json:"bacnet_object_type,omitempty"`
+	BacnetObjectInstance     int32  `protobuf:"varint,16,opt,name=bacnet_object_instance,json=bacnetObjectInstance,proto3" json:"bacnet_object_instance,omitempty"`
+	BacnetPropertyIdentifier string `protobuf:"bytes,17,opt,name=bacnet_property_identifier,json=bacnetPropertyIdentifier,proto3" json:"bacnet_property_identifier,omitempty"`
+	BacnetPriority           int32  `protobuf:"varint,18,opt,name=bacnet_priority,json=bacnetPriority,proto3" json:"bacnet_priority,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
 }
 
 func (x *ProcessedFeature) Reset() {

@@ -1,56 +1,81 @@
-# OmniNStack Threat Intelligence Engine (OTIE) 🛡️
+# OmniNStack Threat Intelligence Engine (OTIE) 🧠🛡️
 
-**OmniNStack-OTIE** is advanced machine-learning driven threat intelligence architecture designed to actively ingest, process, enrich, and evaluate raw telemetry from IoT devices (Modbus, Syslog, Webhooks). Written primarily in Go, OTIE deploys a highly scalable microservice lattice utilizing gRPC and Apache Kafka to stream high-velocity data down an ML-powered inference pipeline.
+**OmniNStack-OTIE** is a **Platform-level AI Security Engine** designed to power Zero Trust environments with Precision AI. Unlike traditional CTI (Cyber Threat Intelligence) systems, OTIE actively ingests, processes, and evaluates real-time raw telemetry (IoT, Modbus, Network, AI Cameras) using a sophisticated **Multi-Model Orchestrator**, a real-time **Feature Store**, and a **Graph-based Threat Intelligence** core.
 
-## 🏗️ Core Architecture
-The OTIE backend operates via a decoupled, sovereign microservice architecture representing a full ingest-to-IOC data pipeline:
+OTIE represents the central brain of a sovereign security architecture, continuously analyzing relationships and autonomously dispatching Zero Trust defensive policies in real-time.
 
-1. **`collector-service`**: *(Currently Active)* - The front-line ingress point. Receives raw device telemetry payload streams via highly efficient `gRPC` endpoints, performs zero-trust ID validation, automatically enriches data loops with server-side generation mechanisms (UUID formulation, Timestamp injection), and securely streams payloads directly onto the `raw-events` Apache Kafka backbone.
-2. **`processor-service`**: Consumes from Kafka, sanitizes data structures, and normalizes payloads into ML-parseable feature logic.
-3. **`ml_engine-service`**: Analyzes the generated event vectors using proprietary threat detection telemetry models.
-4. **`scoring-service`**: Dynamically evaluates the contextualized ML inference results and attributes explicit cyber-threat Risk Scores.
-5. **`ioc_service-service`**: Persistently tracks Indicators of Compromise inside a localized PostgreSQL enclave and orchestrates dynamic dispatcher webhook alerts.
+---
+
+## 🏗️ 5-Layer Platform Architecture
+
+The OTIE backend operates via a highly scalable, domain-driven microservice Monorepo representing a full ingest-to-autonomous-action pipeline:
+
+1. **Data Fabric (`services/`, `platform/`)**: The backbone of spatial and streaming data.
+   - **`collector-service`**: Highly-concurrent gRPC ingress performing localized Zero trust verification and shipping raw telemetry straight to Kafka.
+   - **`processor-service`**: Normalizes and cleans streams, translating Modbus/IoT data into structured models.
+   - **`feature-store`**: Streams refined data from Kafka into Redis (Online Feature Store) and Postgres (Offline Feature Store) with ultra-low latency for model consumption.
+   - **`graph-db`**: Maps the connections between IP, User, Device, and Malicious payloads in real-time via Neo4j.
+2. **AI Model Hub (`ai/`)**: Multi-model infrastructure (Behavior, Graph, Anomaly) collaborating through Ensemble ML.
+3. **Real-time Engine**: Scores risk dynamically (`Risk = Node Risk + Edge Weight + Path Risk`).
+4. **Autonomous Security (SOAR++)**: Autonomously triggers Firewall/ZTNA rule updates upon attack inference.
+5. **AI Security**: Next-gen guardrails preventing GenAI prompt-injection and LLM tampering.
 
 ---
 
 ## 🚀 Local Development Environment
 
+We provide a streamlined local environment to immediately boot your Data Fabric and test the AI-ready microservices.
+
 ### Prerequisites
-- **Git**
 - **Docker & Docker Desktop (incl. `docker-compose`)**
-- **Go 1.26+**
+- **Go 1.21+**
 
-### Infrastructure Deployment
-Boot up the core orchestration components (including Apache Kafka, Elasticsearch, PostgreSQL, and the internal OTIE backend Collector container) leveraging Docker:
+### 1. Boot Local Data Fabric
+Spin up the orchestration components (Kafka, Zookeeper, Redis, PostgreSQL, and Neo4j) natively:
 ```bash
-docker-compose up -d --build
+docker-compose up -d
 ```
-*Wait approximately 5-10 seconds for Kafka KRaft clusters to natively stabilize.*
+*Wait a few seconds for Kafka and the Graph engine to fully stabilize.*
 
-### E2E Diagnostic Tools
-The project ships with native Go diagnostic tooling meant to aggressively circumvent integration bottlenecks. To safely test the Collector pipeline locally:
+### 2. Verify Services
+Validate the architecture builds correctly across all domain packages:
+```bash
+go mod tidy
+go build ./...
+```
 
-1. **Spin up the Network Listener** (Egress validation tool binding natively to our Kafka ingestion topic):
+### 3. End-to-End Diagnostics
+The repository includes synthetic data generators and native egress listeners to test the streaming backend locally:
+
+**Terminal 1 (Listen to Kafka Egress):**
 ```bash
-go run ./cmd/otie_test_conn/main.go
+go run ./tests/integration/otie_test_conn/main.go
 ```
-2. **Fire the Simulated Payload** (gRPC synthetic client firing a mocked malicious Modbus event):
+
+**Terminal 2 (Fire Simulated Payload):**
 ```bash
-go run ./cmd/test_event_generator/main.go
+go run ./tests/integration/test_event_generator/main.go
 ```
-*If everything is synchronized smoothly, you will observe the mocked payload dump beautifully into the Network listener tab, cleanly appended with Collector-generated UUIDs and Server timestamps.*
+
+*If synchronized properly, the synthetic Modbus payload will cleanly traverse the gRPC ingress and dump into the egress terminal with server-injected metadata.*
+
+---
+
+## 📚 Design Documentation
+
+Deep-dive architecture specifications and product strategies can be found in the `design_docs/` directory:
+- `01_platform_upgrade_strategy.md`: Core system roadmap and structural 5-layer capabilities.
+- `02_architecture_prd.md`: Low-level service breakdown, Schema specs, and K8s Helm deployments.
+- `03_pitch_deck.md`: System high-level overview and presentation script.
 
 ---
 
 ## 🛠️ Kubernetes Production Deployment
-OTIE is engineered for immediate horizontal scalability. Native Helm orchestration packages reside internally to gracefully transition your development clusters into active Kubernetes deployments.
+OTIE is engineered for immediate horizontal scalability. Native Helm orchestration packages reside internally (`deployments/helm`) to gracefully transition local components into highly available clusters.
 
 ```bash
-helm install collector ./deployments/helm/collector \
-  --set image.repository=github.com/OmniNStack/OmniNStack-OTIE
+helm install otie ./deployments/helm/otie
 ```
 
----
-
 ## 🔌 Operational CI/CD
-Continuous Integration is strictly governed natively inside GitHub Actions (`.github/workflows/ci.yaml`). All active workflow matrices invoke isolated `golang:1.26` runners performing strict unit testing bounds alongside virtual asynchronous Docker `Buildx` verifications ensuring the core logic remains completely failproof. User Docker Registry destination overrides can be actively configured via dynamic UI `workflow_dispatch` mechanisms.
+Continuous Integration is strictly governed internally inside GitHub Actions. All workflows enforce strict unit-testing, Graph validation, and automated decoupled `Docker buildx` containerization ensuring failproof sovereign deployments.

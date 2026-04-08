@@ -1,0 +1,229 @@
+services:
+  # -------------------------
+  # 1. Data Fabric Messaging
+  # -------------------------
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: otie-kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - KAFKA_NUM_PARTITIONS=3
+    networks:
+      - otie-network
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.0
+    container_name: otie-schema-registry
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      - SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS=kafka:9092
+      - SCHEMA_REGISTRY_HOST_NAME=schema-registry
+      - SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8081
+    networks:
+      - otie-network
+
+  init-kafka:
+    image: apache/kafka:3.7.0
+    container_name: otie-init-kafka
+    depends_on:
+      - kafka
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: |
+      "echo 'Waiting for Kafka...' && \
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server otie-kafka:9092 --list && \
+      echo 'Creating kafka topics' && \
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server otie-kafka:9092 --create --if-not-exists --topic raw-events --replication-factor 1 --partitions 3 && \
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server otie-kafka:9092 --create --if-not-exists --topic processed-events --replication-factor 1 --partitions 3 && \
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server otie-kafka:9092 --create --if-not-exists --topic scored-events --replication-factor 1 --partitions 3 && \
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server otie-kafka:9092 --create --if-not-exists --topic threat-alerts --replication-factor 1 --partitions 3 && \
+      echo 'Successfully created topics.'"
+    networks:
+      - otie-network
+
+  # -------------------------
+  # 2. Data Stores & AI
+  # -------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: otie-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=otie_user
+      - POSTGRES_PASSWORD=otie_password
+      - POSTGRES_DB=otie_db
+    networks:
+      - otie-network
+
+  elasticsearch:
+    image: elasticsearch:8.12.0
+    container_name: otie-elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - otie-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: otie-redis-feature-store
+    ports:
+      - "6379:6379"
+    networks:
+      - otie-network
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: otie-neo4j-graph-db
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/otie_password
+    networks:
+      - otie-network
+
+  # -------------------------
+  # 3. OTIE Microservices
+  # -------------------------
+  collector:
+    build:
+      context: .
+      dockerfile: services/collector-service/Dockerfile
+    container_name: otie-collector-service
+    ports:
+      - "50051:50051"
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_TOPIC=raw-events
+    depends_on:
+      init-kafka:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_started
+    networks:
+      - otie-network
+
+  processor:
+    build:
+      context: .
+      dockerfile: services/processor-service/Dockerfile
+    container_name: otie-processor-service
+    ports:
+      - "50052:50052"
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_IN_TOPIC=raw-events
+      - KAFKA_OUT_TOPIC=processed-events
+      - GRPC_PORT=50052
+      - ML_ENGINE_URL=http://ml-engine:8000/predict
+    depends_on:
+      init-kafka:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_started
+      collector:
+        condition: service_started
+    networks:
+      - otie-network
+
+  ml-engine:
+    build:
+      context: ai/inference
+      dockerfile: Dockerfile
+    container_name: otie-ml-engine-service
+    ports:
+      - "8000:8000"
+    networks:
+      - otie-network
+
+  api-gateway:
+    build:
+      context: api-gateway
+      dockerfile: Dockerfile
+    container_name: otie-api-gateway-service
+    ports:
+      - "80:80"
+    depends_on:
+      - collector
+      - ml-engine
+    networks:
+      - otie-network
+
+  scoring:
+    build:
+      context: .
+      dockerfile: services/generic.Dockerfile
+      args:
+        SERVICE_PATH: services/scoring-service
+    container_name: otie-scoring-service
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - kafka
+      - processor
+    networks:
+      - otie-network
+
+  ioc:
+    build:
+      context: .
+      dockerfile: services/generic.Dockerfile
+      args:
+        SERVICE_PATH: services/ioc-service
+    container_name: otie-ioc-service
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - kafka
+      - scoring
+    networks:
+      - otie-network
+
+  dispatcher:
+    build:
+      context: .
+      dockerfile: services/generic.Dockerfile
+      args:
+        SERVICE_PATH: services/dispatcher-service
+    container_name: otie-dispatcher-service
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - kafka
+      - ioc
+    networks:
+      - otie-network
+
+  test-generator:
+    build:
+      context: .
+      dockerfile: tests/integration/test_event_generator/Dockerfile
+    container_name: otie-test-generator
+    depends_on:
+      - api-gateway
+    networks:
+      - otie-network
+
+networks:
+  otie-network:
+    driver: bridge
